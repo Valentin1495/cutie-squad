@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SHARE_REWARD_CHARACTER_ID } from "./goal-editor/constants";
 import type { Character } from "../store/useAppStore";
 
@@ -19,12 +19,33 @@ const CHARACTER_EMOJI_SRC: Record<string, string> = {
   nabi: "https://static.toss.im/2d-emojis/svg/u1F431.svg",
   podo: "https://static.toss.im/2d-emojis/svg/u1F43C.svg",
   uni: "https://static.toss.im/2d-emojis/svg/u1F984.svg",
-  choco: "https://static.toss.im/2d-emojis/svg/u1F36B.svg",
 };
+
+function getTossEmojiSrc(emoji: string) {
+  const codePoints = Array.from(emoji)
+    .map((char) => char.codePointAt(0))
+    .filter((codePoint): codePoint is number => codePoint != null)
+    .filter((codePoint) => codePoint !== 0xfe0f)
+    .map((codePoint) => `u${codePoint.toString(16).toUpperCase()}`);
+
+  if (codePoints.length === 0) {
+    return null;
+  }
+
+  return `https://static.toss.im/2d-emojis/svg/${codePoints.join("-")}.svg`;
+}
+
+function getCharacterEmojiSrc(character: Character) {
+  return CHARACTER_EMOJI_SRC[character.id] ?? getTossEmojiSrc(character.emoji);
+}
 
 function CharacterAvatar({ character }: { character: Character }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const src = CHARACTER_EMOJI_SRC[character.id];
+  const src = getCharacterEmojiSrc(character);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
 
   if (src != null && !imageFailed) {
     return (

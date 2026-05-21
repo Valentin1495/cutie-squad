@@ -5,13 +5,16 @@ import type { Goal } from "../store/useAppStore";
 
 interface GoalItemProps {
   goal: Goal;
+  disabled?: boolean;
   onToggle: (id: string) => void;
 }
 
-export function GoalItem({ goal, onToggle }: GoalItemProps) {
+export function GoalItem({ goal, disabled = false, onToggle }: GoalItemProps) {
   const haptic = useHaptic();
 
   const handleChange = () => {
+    if (disabled) return;
+
     haptic("basicMedium");
     onToggle(goal.id);
   };
@@ -22,8 +25,9 @@ export function GoalItem({ goal, onToggle }: GoalItemProps) {
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      whileTap={{ scale: 0.97 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      disabled={disabled}
       onClick={handleChange}
       style={{
         display: "flex",
@@ -35,11 +39,13 @@ export function GoalItem({ goal, onToggle }: GoalItemProps) {
         borderRadius: 16,
         backgroundColor: goal.done ? "rgba(149, 117, 205, 0.08)" : "#ffffff",
         border: `1.5px solid ${goal.done ? "rgba(149, 117, 205, 0.3)" : "#f0f0f0"}`,
-        cursor: "pointer",
+        cursor: disabled ? "default" : "pointer",
         transition: "background-color 0.2s, border-color 0.2s",
         userSelect: "none",
+        opacity: disabled ? 0.72 : 1,
       }}
       aria-pressed={goal.done}
+      aria-disabled={disabled}
     >
       <span
         onClick={(event) => event.stopPropagation()}
@@ -49,6 +55,7 @@ export function GoalItem({ goal, onToggle }: GoalItemProps) {
           checked={goal.done}
           onCheckedChange={handleChange}
           size={24}
+          disabled={disabled}
         />
       </span>
       <span style={{ fontSize: 20 }}>{goal.emoji}</span>

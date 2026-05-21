@@ -127,7 +127,7 @@ export const GoalBoard = forwardRef<HTMLElement, GoalBoardProps>(
           }
           style={{
             display: shouldUseLaunchLayout ? "grid" : "block",
-            gap: 8,
+            gap: shouldUseLaunchLayout ? 10 : 8,
             gridTemplateColumns: shouldUseLaunchLayout
               ? "repeat(3, minmax(0, 1fr))"
               : undefined,
@@ -271,11 +271,11 @@ export const GoalBoard = forwardRef<HTMLElement, GoalBoardProps>(
                       borderRadius: 16,
                       backgroundColor: colors.white,
                       padding: shouldUseLaunchLayout
-                        ? "12px 8px 10px"
+                        ? "18px 8px 10px"
                         : "10px 10px 10px 12px",
                       marginBottom: shouldUseLaunchLayout ? 0 : 8,
-                      minHeight: shouldUseLaunchLayout ? 92 : undefined,
-                      overflow: "visible",
+                      minHeight: shouldUseLaunchLayout ? 104 : undefined,
+                      overflow: shouldUseLaunchLayout ? "hidden" : "visible",
                     }}
                   >
                     <AnimatePresence>
@@ -292,11 +292,11 @@ export const GoalBoard = forwardRef<HTMLElement, GoalBoardProps>(
                           }}
                           style={{
                             position: "absolute",
-                            top: -8,
-                            right: -6,
+                            top: shouldUseLaunchLayout ? 6 : -8,
+                            right: shouldUseLaunchLayout ? 6 : -6,
                             zIndex: 6,
-                            width: 24,
-                            height: 24,
+                            width: shouldUseLaunchLayout ? 22 : 24,
+                            height: shouldUseLaunchLayout ? 22 : 24,
                             borderRadius: 999,
                             display: "flex",
                             alignItems: "center",
@@ -304,7 +304,7 @@ export const GoalBoard = forwardRef<HTMLElement, GoalBoardProps>(
                             border: `2px solid ${colors.white}`,
                             backgroundColor: crewColor,
                             color: colors.white,
-                            fontSize: 14,
+                            fontSize: shouldUseLaunchLayout ? 13 : 14,
                             fontWeight: 900,
                             boxShadow: `0 8px 16px ${withAlpha(crewColor, 0.24)}`,
                             pointerEvents: "none",
@@ -476,7 +476,7 @@ export const GoalBoard = forwardRef<HTMLElement, GoalBoardProps>(
                           minWidth: 0,
                           width: "100%",
                           color: colors.grey800,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: 900,
                           lineHeight: 1.28,
                           textAlign: "center",

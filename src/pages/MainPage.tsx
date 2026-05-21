@@ -17,7 +17,7 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const PROGRESS_REACTION_DELAY_MS = 900;
+const PROGRESS_REACTION_DELAY_MS = 450;
 const INITIAL_CREW_CHARACTERS = getAvailableCrewCharacters([]);
 
 export function MainPage() {
@@ -30,7 +30,9 @@ export function MainPage() {
     completedGoalRecords,
     toggleGoal,
     updateGoals,
+    startNewMission,
     resetOnboarding,
+    setShowCelebration,
   } = useAppStore();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -74,6 +76,7 @@ export function MainPage() {
   const selectedMissionCrew =
     missionCrewCharacters[selectedCrewIndex] ?? missionCrewCharacters[0];
   const done = goals.filter((goal) => goal.done).length;
+  const allDone = goals.length > 0 && done === goals.length;
   const [displayedDone, setDisplayedDone] = useState(done);
   const displayedAllDone = goals.length > 0 && displayedDone === goals.length;
   const today = new Date().toLocaleDateString("ko-KR", {
@@ -145,6 +148,8 @@ export function MainPage() {
 
   const handleToggleGoal = useCallback(
     (id: string) => {
+      if (allDone) return;
+
       const target = goals.find((goal) => goal.id === id);
       if (target == null) return;
       const targetIndex = goals.findIndex((goal) => goal.id === id);
@@ -181,12 +186,20 @@ export function MainPage() {
     },
     [
       availableCrewCharacters,
+      allDone,
       goals,
       missionCrewCharacters,
       selectedCrewIndex,
       toggleGoal,
     ],
   );
+
+  const handleOpenCelebration = () => {
+    if (!allDone) return;
+
+    haptic("success");
+    setShowCelebration(true);
+  };
 
   const handleResetOnboarding = () => {
     const confirmed = window.confirm(
@@ -196,6 +209,11 @@ export function MainPage() {
 
     haptic("success");
     resetOnboarding();
+  };
+
+  const handleStartNewMission = () => {
+    haptic("success");
+    startNewMission();
   };
 
   if (editing) {
@@ -227,43 +245,12 @@ export function MainPage() {
         }
       />
 
-      <ProgressSection done={displayedDone} total={goals.length} />
-
-      <CrewCheerBand
-        characters={missionCrewCharacters}
-        selectedIndex={selectedCrewIndex}
-        cheerKey={crewCheerKey}
-        onSelect={handleCrewSelect}
-        message={crewMessage}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-
-      <div style={{ padding: "12px 20px 4px" }}>
-        <Button
-          type="button"
-          display="full"
-          size="large"
-          color="primary"
-          variant="fill"
-          onClick={openDrawer}
-          style={{
-            width: "100%",
-            borderRadius: 14,
-            fontSize: 14,
-            fontWeight: 800,
-          }}
-        >
-          누적 달성 {totalCompletionCount}개 ·{" "}
-          응원단 {unlockedCharacters.length}/{ALL_CREW_CHARACTERS.length}명
-        </Button>
-      </div>
-
       {displayedAllDone && (
         <motion.div
           initial={{ opacity: 0, y: 14, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          style={{ padding: "20px" }}
+          style={{ padding: "4px 20px 16px" }}
         >
           <div
             style={{
@@ -287,13 +274,38 @@ export function MainPage() {
                 lineHeight: 1.55,
               }}
             >
-              같은 목표를 다시 체크해도 괜찮아요.
+              오늘의 미션은 모두 완료했어요.
               <br />
-              내일이 되면 응원판이 새롭게 열립니다.
+              축하를 받은 뒤 새로운 미션을 시작해보세요.
             </p>
+            <Button
+              type="button"
+              display="full"
+              size="large"
+              variant="fill"
+              onClick={handleOpenCelebration}
+              style={{
+                marginTop: 18,
+                borderRadius: 999,
+                fontWeight: 900,
+              }}
+            >
+              축하 받기
+            </Button>
           </div>
         </motion.div>
       )}
+
+      <ProgressSection done={displayedDone} total={goals.length} />
+
+      <CrewCheerBand
+        characters={missionCrewCharacters}
+        selectedIndex={selectedCrewIndex}
+        cheerKey={crewCheerKey}
+        onSelect={handleCrewSelect}
+        message={crewMessage}
+        shouldReduceMotion={shouldReduceMotion}
+      />
 
       <div
         style={{
@@ -312,27 +324,67 @@ export function MainPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.06 }}
             >
-              <GoalItem goal={goal} onToggle={handleToggleGoal} />
+              <GoalItem
+                goal={goal}
+                disabled={allDone}
+                onToggle={handleToggleGoal}
+              />
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
       <div style={{ padding: "0 20px 20px" }}>
+        {!allDone && (
+          <Button
+            type="button"
+            display="full"
+            size="large"
+            variant="weak"
+            onClick={() => setEditing(true)}
+            style={{
+              width: "100%",
+              borderRadius: 14,
+              fontSize: 14,
+              fontWeight: 800,
+            }}
+          >
+            목표 수정하기
+          </Button>
+        )}
         <Button
           type="button"
           display="full"
           size="large"
           variant="weak"
-          onClick={() => setEditing(true)}
+          onClick={openDrawer}
           style={{
             width: "100%",
-            borderRadius: 14,
+            borderRadius: 999,
             fontSize: 14,
             fontWeight: 800,
+            marginTop: allDone ? 0 : 10,
           }}
         >
-          목표 수정하기
+          누적 달성 {totalCompletionCount}개 · 응원단{" "}
+          {unlockedCharacters.length}/{ALL_CREW_CHARACTERS.length}명
+        </Button>
+        <Button
+          type="button"
+          display="full"
+          size="large"
+          variant="weak"
+          color="dark"
+          onClick={handleStartNewMission}
+          style={{
+            width: "100%",
+            borderRadius: 999,
+            fontSize: 14,
+            fontWeight: 800,
+            marginTop: 10,
+          }}
+        >
+          새로운 미션 시작하기
         </Button>
         <Button
           type="button"
@@ -343,7 +395,7 @@ export function MainPage() {
           onClick={handleResetOnboarding}
           style={{
             width: "100%",
-            borderRadius: 14,
+            borderRadius: 999,
             fontSize: 14,
             fontWeight: 800,
             marginTop: 10,

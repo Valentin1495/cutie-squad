@@ -58,6 +58,7 @@ const LEGACY_CHARACTER_ID_MAP: Record<string, string> = {
   fox: "yeowoobi",
   panda: "podo",
   unicorn: "uni",
+  choco: SHARE_REWARD_CHARACTER_ID,
 };
 
 export const RECOMMENDED_GOALS: GoalInput[] = [
@@ -94,6 +95,7 @@ interface AppState extends PersistedState {
   completeOnboarding: (goals: GoalInput[]) => void;
   saveGoals: (goals: GoalInput[]) => void;
   updateGoals: (goals: GoalInput[]) => void;
+  startNewMission: () => void;
   resetOnboarding: () => void;
   unlockShareRewardCharacter: () => Character | null;
   setShowCelebration: (show: boolean) => void;
@@ -325,8 +327,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newCount = isFirstCompletionToday
       ? totalCompletionCount + 1
       : totalCompletionCount;
-    const allDone = newGoals.length > 0 && newGoals.every((item) => item.done);
-
     const alreadyUnlockedIds = new Set(
       unlockedCharacters.map((character) => character.id),
     );
@@ -349,7 +349,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       dailyCompletedGoalIds: newDailyCompletedGoalIds,
       completedGoalRecords: newCompletedGoalRecords,
       unlockedCharacters: newUnlockedCharacters,
-      showCelebration: nextDone && allDone,
+      showCelebration: false,
       newCharacter: newCharacter ?? null,
     });
 
@@ -402,6 +402,21 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ goals, hasOnboarded: true });
     persistSave({ ...getPersistedState(get()), goals, hasOnboarded: true });
+  },
+
+  startNewMission: () => {
+    const today = getTodayString();
+    const nextState = {
+      goals: [],
+      dailyCompletedGoalIds: [],
+      lastResetDate: today,
+      hasOnboarded: false,
+      showCelebration: false,
+      newCharacter: null,
+    };
+
+    set(nextState);
+    persistSave({ ...getPersistedState(get()), ...nextState });
   },
 
   unlockShareRewardCharacter: () => {

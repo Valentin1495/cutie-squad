@@ -1,12 +1,24 @@
 import { contactsViral } from "@apps-in-toss/web-framework";
-import { BottomSheet, Button, useBottomSheet, useDialog, useToast } from "@toss/tds-mobile";
+import {
+  BottomSheet,
+  Button,
+  IconButton,
+  useBottomSheet,
+  useDialog,
+  useToast,
+} from "@toss/tds-mobile";
+import type { ButtonProps } from "@toss/tds-mobile";
 import confetti from "canvas-confetti";
 import { motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CharacterCard } from "../components/CharacterCard";
 import { SHARE_REWARD_CHARACTER_ID } from "../components/goal-editor/constants";
 import { useHaptic } from "../hooks/useHaptic";
-import { ALL_CHARACTERS, useAppStore, type Character } from "../store/useAppStore";
+import {
+  ALL_CHARACTERS,
+  useAppStore,
+  type Character,
+} from "../store/useAppStore";
 
 const CONTACTS_VIRAL_MODULE_ID =
   import.meta.env.VITE_CONTACTS_VIRAL_MODULE_ID?.trim() ?? "";
@@ -51,7 +63,12 @@ const CROWD_ROWS: Array<{
   },
 ];
 
-const LIGHT_COUNT = 7;
+const STAGE_SPOTLIGHT = {
+  sourceLeft: 50,
+  beamLeft: 50,
+  beamWidth: 86,
+  color: "255,215,64",
+} as const;
 const STREAK_DAYS = 3;
 const WEEK_DAYS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
@@ -116,39 +133,28 @@ function CrowdSection({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
     <div
       style={{
         flex: "0 0 auto",
-        height: "clamp(330px, 44vh, 500px)",
+        height: "clamp(300px, 39vh, 440px)",
         position: "relative",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        gap: 12,
-        padding: "26px 0 18px",
+        justifyContent: "flex-end",
+        gap: 10,
+        padding: "52px 0 14px",
         width: "100%",
         overflow: "hidden",
       }}
     >
+      <StageLights shouldReduceMotion={shouldReduceMotion} />
+      <CrowdSpotlights shouldReduceMotion={shouldReduceMotion} />
+
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(180deg, rgba(255,215,64,0.14) 0%, rgba(149,117,205,0.1) 34%, rgba(149,117,205,0.035) 68%, transparent 100%)",
+            "linear-gradient(180deg, rgba(255,215,64,0.08) 0%, rgba(30,24,76,0.5) 22%, rgba(18,15,45,0.72) 58%, rgba(13,11,30,0) 100%)",
           pointerEvents: "none",
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          left: "50%",
-          width: "92%",
-          height: "70%",
-          transform: "translateX(-50%)",
-          clipPath: "polygon(36% 0%, 64% 0%, 100% 100%, 0% 100%)",
-          background:
-            "linear-gradient(180deg, rgba(255,215,64,0.12), rgba(149,117,205,0.08) 48%, transparent 100%)",
-          pointerEvents: "none",
+          zIndex: 0,
         }}
       />
 
@@ -156,14 +162,27 @@ function CrowdSection({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
         style={{
           position: "absolute",
           left: "50%",
-          top: "56%",
-          width: "92%",
-          height: 148,
+          top: "50%",
+          width: "104%",
+          height: 210,
           transform: "translate(-50%, -50%)",
           borderRadius: "50%",
           background:
-            "radial-gradient(ellipse, rgba(149,117,205,0.34) 0%, rgba(149,117,205,0.14) 42%, transparent 74%)",
+            "radial-gradient(ellipse, rgba(149,117,205,0.3) 0%, rgba(80,65,155,0.16) 38%, rgba(26,21,69,0.08) 62%, transparent 78%)",
+          filter: "blur(2px)",
           pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          inset: "18px 0 0",
+          background:
+            "radial-gradient(ellipse at 50% 34%, transparent 0%, transparent 38%, rgba(7,6,18,0.18) 68%, rgba(7,6,18,0.5) 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
         }}
       />
 
@@ -213,42 +232,115 @@ function CrowdSection({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
   );
 }
 
+function CrowdSpotlights({
+  shouldReduceMotion,
+}: {
+  shouldReduceMotion: boolean;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: "0 0 0",
+        overflow: "hidden",
+        pointerEvents: "none",
+        zIndex: 1,
+      }}
+    >
+      <motion.div
+        animate={
+          shouldReduceMotion
+            ? { opacity: 0.58 }
+            : { opacity: [0.42, 0.64, 0.5] }
+        }
+        transition={{
+          duration: 2.4,
+          repeat: shouldReduceMotion ? 0 : Infinity,
+          ease: "easeInOut",
+        }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: `${STAGE_SPOTLIGHT.beamLeft}%`,
+          width: `${STAGE_SPOTLIGHT.beamWidth}%`,
+          height: "84%",
+          transform: "translateX(-50%)",
+          transformOrigin: "50% 0%",
+          clipPath: "polygon(47.5% 0%, 52.5% 0%, 100% 100%, 0% 100%)",
+          background: `linear-gradient(180deg, rgba(${STAGE_SPOTLIGHT.color},0.28) 0%, rgba(${STAGE_SPOTLIGHT.color},0.2) 36%, rgba(${STAGE_SPOTLIGHT.color},0.06) 86%, transparent 100%)`,
+          mixBlendMode: "screen",
+          filter: "blur(0.5px)",
+        }}
+      />
+      <motion.div
+        animate={
+          shouldReduceMotion
+            ? { opacity: 0.7 }
+            : { opacity: [0.48, 0.76, 0.58] }
+        }
+        transition={{
+          duration: 2.4,
+          repeat: shouldReduceMotion ? 0 : Infinity,
+          ease: "easeInOut",
+        }}
+        style={{
+          position: "absolute",
+          left: "50%",
+          bottom: 12,
+          width: "94%",
+          height: 188,
+          transform: "translateX(-50%)",
+          borderRadius: "50%",
+          background: `radial-gradient(ellipse, rgba(${STAGE_SPOTLIGHT.color},0.24) 0%, rgba(149,117,205,0.2) 34%, rgba(149,117,205,0.08) 66%, transparent 82%)`,
+          mixBlendMode: "screen",
+        }}
+      />
+    </div>
+  );
+}
+
 function StageLights({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-around",
-        padding: "22px 56px 8px",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 4,
+        height: 24,
+        pointerEvents: "none",
       }}
     >
-      {Array.from({ length: LIGHT_COUNT }, (_, index) => (
-        <motion.div
-          key={index}
-          animate={{
-            opacity: shouldReduceMotion ? 0.75 : [0.3, 1, 0.3],
-            boxShadow: shouldReduceMotion
-              ? "0 0 6px 2px rgba(255,215,64,0.35)"
-              : [
-                  "0 0 4px 1px rgba(255,215,64,0.2)",
-                  "0 0 10px 3px rgba(255,215,64,0.7)",
-                  "0 0 4px 1px rgba(255,215,64,0.2)",
-                ],
-          }}
-          transition={{
-            duration: 1.8,
-            delay: index * 0.18,
-            repeat: shouldReduceMotion ? 0 : Infinity,
-            ease: "easeInOut",
-          }}
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            backgroundColor: "#ffd740",
-          }}
-        />
-      ))}
+      <motion.div
+        animate={{
+          opacity: shouldReduceMotion ? 0.85 : [0.62, 1, 0.78],
+          boxShadow: shouldReduceMotion
+            ? "0 0 16px 6px rgba(255,215,64,0.42)"
+            : [
+                "0 0 10px 4px rgba(255,215,64,0.36)",
+                "0 0 22px 8px rgba(255,215,64,0.78)",
+                "0 0 14px 5px rgba(255,215,64,0.48)",
+              ],
+        }}
+        transition={{
+          duration: 2.4,
+          repeat: shouldReduceMotion ? 0 : Infinity,
+          ease: "easeInOut",
+        }}
+        style={{
+          position: "absolute",
+          left: `${STAGE_SPOTLIGHT.sourceLeft}%`,
+          top: 0,
+          width: 16,
+          height: 16,
+          transform: "translate(-50%, -50%)",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, #ffe47a 0%, #d8b83f 48%, rgba(255,215,64,0.34) 72%, transparent 100%)",
+          border: "1px solid rgba(255,238,154,0.42)",
+        }}
+      />
     </div>
   );
 }
@@ -275,19 +367,15 @@ function StreakCard({ hasNewCharacter }: { hasNewCharacter: boolean }) {
     >
       <div
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: "50%",
-          backgroundColor: "rgba(255,215,64,0.16)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 23,
-          boxShadow: "inset 0 -8px 14px rgba(255,149,0,0.12)",
+          color: "#ffd740",
+          fontSize: 32,
+          fontWeight: 900,
+          lineHeight: 1,
+          letterSpacing: "-0.2px",
           flex: "0 0 auto",
         }}
       >
-        🔥
+        {streakDays}일
       </div>
 
       <div
@@ -315,7 +403,7 @@ function StreakCard({ hasNewCharacter }: { hasNewCharacter: boolean }) {
             marginTop: 4,
           }}
         >
-          내일도 같은 목표로 만나요 💪
+          내일도 만나요 💪
         </div>
         {hasNewCharacter && (
           <div
@@ -339,15 +427,19 @@ function StreakCard({ hasNewCharacter }: { hasNewCharacter: boolean }) {
 
       <div
         style={{
-          color: "#ffd740",
-          fontSize: 32,
-          fontWeight: 900,
-          lineHeight: 1,
-          letterSpacing: "-0.2px",
+          width: 42,
+          height: 42,
+          borderRadius: "50%",
+          backgroundColor: "rgba(255,215,64,0.16)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 23,
+          boxShadow: "inset 0 -8px 14px rgba(255,149,0,0.12)",
           flex: "0 0 auto",
         }}
       >
-        {streakDays}일
+        🔥
       </div>
     </motion.div>
   );
@@ -471,41 +563,19 @@ function WeeklyProgress({ weekData }: WeeklyProgressProps) {
   );
 }
 
-function ShareRewardChip({
+function ShareRewardButton({
   children,
-  onClick,
-  disabled = false,
-}: {
+  ...buttonProps
+}: Omit<ButtonProps, "type"> & {
   children: string;
-  onClick: () => void;
-  disabled?: boolean;
 }) {
   return (
     <Button
       type="button"
       size="medium"
-      color="light"
-      variant="weak"
-      display="inline"
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        minHeight: 42,
-        borderRadius: 999,
-        backgroundColor: disabled
-          ? "rgba(255,255,255,0.06)"
-          : "rgba(255,255,255,0.1)",
-        border: "1px solid rgba(255,255,255,0.12)",
-        color: "#ffffff",
-        cursor: disabled ? "default" : "pointer",
-        fontSize: 14,
-        fontWeight: 800,
-        padding: "0 16px",
-        whiteSpace: "nowrap",
-        boxShadow: "inset 0 -6px 14px rgba(0,0,0,0.12)",
-        opacity: disabled ? 0.62 : 1,
-        width: "100%",
-      }}
+      display="full"
+      style={{ borderRadius: 999 }}
+      {...buttonProps}
     >
       {children}
     </Button>
@@ -544,7 +614,7 @@ function RewardPreview({ character }: { character: Character }) {
   );
 }
 
-function StageHeader({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+function StageHeader({ onReturn }: { onReturn: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
@@ -553,14 +623,37 @@ function StageHeader({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
       style={{
         backgroundColor: "#1a1545",
         paddingBottom: 16,
+        position: "relative",
         textAlign: "center",
         borderBottom: "2px solid #3d2f7a",
         boxShadow: "0 2px 12px rgba(149,117,205,0.3)",
       }}
     >
-      <StageLights shouldReduceMotion={shouldReduceMotion} />
+      <div
+        style={{
+          position: "absolute",
+          top: 14,
+          left: 16,
+          zIndex: 2,
+        }}
+      >
+        <IconButton
+          src="https://static.toss.im/icons/svg/icon-x-mono.svg"
+          aria-label="완료"
+          type="button"
+          variant="fill"
+          iconSize={20}
+          color="#ffffff"
+          bgColor="rgba(255,255,255,0.16)"
+          onClick={onReturn}
+          style={{
+            borderRadius: 18,
+            boxShadow: "inset 0 -4px 10px rgba(0,0,0,0.12)",
+          }}
+        />
+      </div>
 
-      <div style={{ padding: "16px 20px 0" }}>
+      <div style={{ padding: "32px 20px 0" }}>
         <p
           style={{
             fontSize: 11,
@@ -577,21 +670,11 @@ function StageHeader({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
             fontSize: 24,
             fontWeight: 800,
             color: "#ffffff",
-            margin: "0 0 6px",
+            margin: 0,
           }}
         >
           오늘 목표 완료!
         </h1>
-        <p
-          style={{
-            fontSize: 13,
-            color: "rgba(255,255,255,0.45)",
-            lineHeight: 1.5,
-            margin: 0,
-          }}
-        >
-          관중석이 들썩이고 있어요
-        </p>
       </div>
     </motion.div>
   );
@@ -752,14 +835,14 @@ export function CelebrationPage() {
         overflow: "hidden",
       }}
     >
-      <StageHeader shouldReduceMotion={shouldReduceMotion} />
+      <StageHeader onReturn={handleReturn} />
 
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "flex-start",
           gap: 18,
           minHeight: 0,
           padding: "0 0 10px",
@@ -837,20 +920,23 @@ export function CelebrationPage() {
               padding: "0 20px 2px",
             }}
           >
-            <ShareRewardChip onClick={handleShareReward} disabled={sharing}>
-              {sharing ? "공유 준비 중" : "📸 공유하기"}
-            </ShareRewardChip>
-            <ShareRewardChip onClick={handleRewardPreview}>
+            <ShareRewardButton
+              variant="fill"
+              loading={sharing}
+              onClick={handleShareReward}
+            >
+              {sharing ? "공유 준비 중" : "💫 공유하기"}
+            </ShareRewardButton>
+            <ShareRewardButton
+              size="medium"
+              display="full"
+              variant="weak"
+              onClick={handleRewardPreview}
+            >
               🎁 리워드 보기
-            </ShareRewardChip>
+            </ShareRewardButton>
           </motion.div>
         </div>
-      </div>
-
-      <div style={{ padding: "24px 20px 40px", backgroundColor: "#0d0b1e" }}>
-        <Button onClick={handleReturn} style={{ width: "100%" }}>
-          응원판으로 돌아가기
-        </Button>
       </div>
     </div>
   );
